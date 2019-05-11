@@ -26,9 +26,9 @@ typedef struct {
   void* stack;
 } cothread_struct;
 
-static thread_local cothread_struct co_primary;
-static thread_local cothread_struct* creating;
-static thread_local cothread_struct* co_running = 0;
+static __thread cothread_struct co_primary;
+static __thread cothread_struct* creating;
+static __thread cothread_struct* co_running = 0;
 
 static void springboard(int ignored) {
   if(sigsetjmp(creating->context, 0)) {
