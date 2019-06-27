@@ -14,8 +14,9 @@
     #include "amd64.c"
   #elif defined(__arm__)
     #include "arm.c"
-  #elif defined(_ARCH_PPC)
-    #include "ppc.c"
+  /* FIXME: co_create crashes on ppc64el */
+  /*#elif defined(_ARCH_PPC)
+    #include "ppc.c" */
   #elif defined(_WIN32)
     #include "fiber.c"
   #else
