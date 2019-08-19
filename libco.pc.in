@@ -5,5 +5,5 @@ includedir=@includedir@
 Name: libco
 Description: Cooperative multithreading library written in C89C
 Version: 18
-Libs: ${libdir} -lco
-Cflags: ${includedir}
+Libs: -L${libdir} -lco
+Cflags: -I${includedir}
