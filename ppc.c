@@ -425,3 +425,7 @@ void co_switch(cothread_t t) {
 
   CO_SWAP_ASM(t, old);
 }
+
+int co_serializable() {
+  return 0;
+}
