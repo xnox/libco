@@ -255,11 +255,9 @@ cothread_t co_derive(void* memory, unsigned int size, void (*coentry)(void)) {
 }
 
 cothread_t co_create(unsigned int size, void (*coentry)(void)) {
-  size_t total = MAX(size, MIN_STACK) + sizeof(struct ppc64_context);
-  void* memory = malloc(total);
-
+  void* memory = malloc(size);
   if(!memory) return (cothread_t)0;
-  return co_derive(memory, total, coentry);
+  return co_derive(memory, size, coentry);
 }
 
 void co_delete(cothread_t handle) {
@@ -270,6 +268,10 @@ void co_switch(cothread_t to) {
   struct ppc64_context* from = co_active_handle;
   co_active_handle = (struct ppc64_context*)to;
   swap_context((struct ppc64_context*)to, from);
+}
+
+int co_serializable() {
+  return 1;
 }
 
 #ifdef __cplusplus
