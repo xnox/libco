@@ -14,50 +14,43 @@ extern "C" {
 
 static thread_local unsigned long co_active_buffer[64];
 static thread_local cothread_t co_active_handle = 0;
-static void (*co_swap)(cothread_t, cothread_t) = 0;
+void co_swap(cothread_t, cothread_t);
 
-#ifdef LIBCO_MPROTECT
-  alignas(4096)
-#else
-  section(text)
-#endif
-static const uint32_t co_swap_function[1024] = {
-  0xa9002428,  /* stp x8,x9,[x1]        */
-  0xa9012c2a,  /* stp x10,x11,[x1,#16]  */
-  0xa902342c,  /* stp x12,x13,[x1,#32]  */
-  0xa9033c2e,  /* stp x14,x15,[x1,#48]  */
-  0xf9002433,  /* str x19,[x1,#72]      */
-  0xa9055434,  /* stp x20,x21,[x1,#80]  */
-  0xa9065c36,  /* stp x22,x23,[x1,#96]  */
-  0xa9076438,  /* stp x24,x25,[x1,#112] */
-  0xa9086c3a,  /* stp x26,x27,[x1,#128] */
-  0xa909743c,  /* stp x28,x29,[x1,#144] */
-  0x910003f0,  /* mov x16,sp            */
-  0xa90a7830,  /* stp x16,x30,[x1,#160] */
+__asm__(
+  ".text\n"
+  ".align 4\n"
+  ".type co_swap #function\n"
+  "co_swap:\n"
 
-  0xa9402408,  /* ldp x8,x9,[x0]        */
-  0xa9412c0a,  /* ldp x10,x11,[x0,#16]  */
-  0xa942340c,  /* ldp x12,x13,[x0,#32]  */
-  0xa9433c0e,  /* ldp x14,x15,[x0,#48]  */
-  0xf9402413,  /* ldr x19,[x0,#72]      */
-  0xa9455414,  /* ldp x20,x21,[x0,#80]  */
-  0xa9465c16,  /* ldp x22,x23,[x0,#96]  */
-  0xa9476418,  /* ldp x24,x25,[x0,#112] */
-  0xa9486c1a,  /* ldp x26,x27,[x0,#128] */
-  0xa949741c,  /* ldp x28,x29,[x0,#144] */
-  0xa94a4410,  /* ldp x16,x17,[x0,#160] */
-  0x9100021f,  /* mov sp,x16            */
-  0xd61f0220,  /* br x17                */
-};
+  "stp x8,x9,[x1]\n"
+  "stp x10,x11,[x1,#16]\n"
+  "stp x12,x13,[x1,#32]\n"
+  "stp x14,x15,[x1,#48]\n"
+  "str x19,[x1,#72]\n"
+  "stp x20,x21,[x1,#80]\n"
+  "stp x22,x23,[x1,#96]\n"
+  "stp x24,x25,[x1,#112]\n"
+  "stp x26,x27,[x1,#128]\n"
+  "stp x28,x29,[x1,#144]\n"
+  "mov x16,sp\n"
+  "stp x16,x30,[x1,#160]\n"
 
-static void co_init() {
-  #ifdef LIBCO_MPROTECT
-  unsigned long addr = (unsigned long)co_swap_function;
-  unsigned long base = addr - (addr % sysconf(_SC_PAGESIZE));
-  unsigned long size = (addr - base) + sizeof co_swap_function;
-  mprotect((void*)base, size, PROT_READ | PROT_EXEC);
-  #endif
-}
+  "ldp x8,x9,[x0]\n"
+  "ldp x10,x11,[x0,#16]\n"
+  "ldp x12,x13,[x0,#32]\n"
+  "ldp x14,x15,[x0,#48]\n"
+  "ldr x19,[x0,#72]\n"
+  "ldp x20,x21,[x0,#80]\n"
+  "ldp x22,x23,[x0,#96]\n"
+  "ldp x24,x25,[x0,#112]\n"
+  "ldp x26,x27,[x0,#128]\n"
+  "ldp x28,x29,[x0,#144]\n"
+  "ldp x16,x17,[x0,#160]\n"
+  "mov sp,x16\n"
+  "br x17\n"
+
+  ".size co_swap, .-co_swap\n"
+);
 
 cothread_t co_active() {
   if(!co_active_handle) co_active_handle = &co_active_buffer;
@@ -66,10 +59,6 @@ cothread_t co_active() {
 
 cothread_t co_derive(void* memory, unsigned int size, void (*entrypoint)(void)) {
   unsigned long* handle;
-  if(!co_swap) {
-    co_init();
-    co_swap = (void (*)(cothread_t, cothread_t))co_swap_function;
-  }
   if(!co_active_handle) co_active_handle = &co_active_buffer;
 
   if(handle = (unsigned long*)memory) {
