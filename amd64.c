@@ -13,13 +13,13 @@ static thread_local long long co_active_buffer[64];
 static thread_local cothread_t co_active_handle = 0;
 static void (*co_swap)(cothread_t, cothread_t) = 0;
 
-#ifdef LIBCO_MPROTECT
-  alignas(4096)
-#else
-  section(text)
-#endif
 #ifdef _WIN32
   /* ABI: Win64 */
+  #ifdef LIBCO_MPROTECT
+    alignas(4096)
+  #else
+    section(text)
+  #endif
   static const unsigned char co_swap_function[4096] = {
     0x48, 0x89, 0x22,              /* mov [rdx],rsp          */
     0x48, 0x8b, 0x21,              /* mov rsp,[rcx]          */
@@ -79,36 +79,38 @@ static void (*co_swap)(cothread_t, cothread_t) = 0;
   }
 #else
   /* ABI: SystemV */
-  static const unsigned char co_swap_function[4096] = {
-    0x48, 0x89, 0x26,        /* mov [rsi],rsp    */
-    0x48, 0x8b, 0x27,        /* mov rsp,[rdi]    */
-    0x58,                    /* pop rax          */
-    0x48, 0x89, 0x6e, 0x08,  /* mov [rsi+ 8],rbp */
-    0x48, 0x89, 0x5e, 0x10,  /* mov [rsi+16],rbx */
-    0x4c, 0x89, 0x66, 0x18,  /* mov [rsi+24],r12 */
-    0x4c, 0x89, 0x6e, 0x20,  /* mov [rsi+32],r13 */
-    0x4c, 0x89, 0x76, 0x28,  /* mov [rsi+40],r14 */
-    0x4c, 0x89, 0x7e, 0x30,  /* mov [rsi+48],r15 */
-    0x48, 0x8b, 0x6f, 0x08,  /* mov rbp,[rdi+ 8] */
-    0x48, 0x8b, 0x5f, 0x10,  /* mov rbx,[rdi+16] */
-    0x4c, 0x8b, 0x67, 0x18,  /* mov r12,[rdi+24] */
-    0x4c, 0x8b, 0x6f, 0x20,  /* mov r13,[rdi+32] */
-    0x4c, 0x8b, 0x77, 0x28,  /* mov r14,[rdi+40] */
-    0x4c, 0x8b, 0x7f, 0x30,  /* mov r15,[rdi+48] */
-    0xff, 0xe0,              /* jmp rax          */
-  };
+  void co_swap_function(cothread_t, cothread_t);
 
+  __asm__(
+    ".text\n"
+    ".align 4\n"
+    ".type co_swap_function @function\n"
+    ".intel_syntax noprefix\n"
+    "co_swap_function:\n"
+
+    "mov [rsi],rsp\n"
+    "mov rsp,[rdi]\n"
+    "pop rax\n"
+    "mov [rsi+ 8],rbp\n"
+    "mov [rsi+16],rbx\n"
+    "mov [rsi+24],r12\n"
+    "mov [rsi+32],r13\n"
+    "mov [rsi+40],r14\n"
+    "mov [rsi+48],r15\n"
+    "mov rbp,[rdi+ 8]\n"
+    "mov rbx,[rdi+16]\n"
+    "mov r12,[rdi+24]\n"
+    "mov r13,[rdi+32]\n"
+    "mov r14,[rdi+40]\n"
+    "mov r15,[rdi+48]\n"
+    "jmp rax\n"
+
+    ".size co_swap_function, .-co_swap_function\n"
+    ".att_syntax\n"
+  );
   #include <unistd.h>
-  #include <sys/mman.h>
 
-  static void co_init() {
-    #ifdef LIBCO_MPROTECT
-    unsigned long long addr = (unsigned long long)co_swap_function;
-    unsigned long long base = addr - (addr % sysconf(_SC_PAGESIZE));
-    unsigned long long size = (addr - base) + sizeof co_swap_function;
-    mprotect((void*)base, size, PROT_READ | PROT_EXEC);
-    #endif
-  }
+  static void co_init() {}
 #endif
 
 static void crash() {
