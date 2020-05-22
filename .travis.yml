@@ -1,0 +1,26 @@
+dist: bionic
+arch: amd64
+language: c
+
+env:
+  global:
+   - secure: "RcGM/2jLFUqN8KXrZAL94sWGM7LKaluWtyguBHnGS0A22cLS3aX0AmrU98Zx1Hr1NGui1XJw8xezlcjxXfuuPbELFg0BDfQUeRc9u2pYiLnX5UJwrVwnqPn5SzfyoiovZBzQaolrJ4LiFkP86pUB6TopvRmXVN6ikhDH9gozYy8="
+
+addons:
+  coverity_scan:
+    build_script_url: https://dl.stgraber.org/coverity_travis.sh
+    project:
+      name: "canonical/libco"
+      description: "cooperative multithreading library"
+
+    # Where email notification of build analysis results will be sent
+    notification_email: free.ekanayaka@canonical.com
+
+    build_command: "make"
+    branch_pattern: master
+
+compiler:
+  - gcc
+
+script:
+  - make
