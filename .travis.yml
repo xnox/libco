@@ -4,7 +4,7 @@ language: c
 
 env:
   global:
-   - secure: "RcGM/2jLFUqN8KXrZAL94sWGM7LKaluWtyguBHnGS0A22cLS3aX0AmrU98Zx1Hr1NGui1XJw8xezlcjxXfuuPbELFg0BDfQUeRc9u2pYiLnX5UJwrVwnqPn5SzfyoiovZBzQaolrJ4LiFkP86pUB6TopvRmXVN6ikhDH9gozYy8="
+   - secure: "H0gPkhxy8FXsmP9F20WXdmPJTfW/974oIm/a/f/saAhb3a4s4lthJ/4tJ7BsLETH6bozeE4JH871RTVLyQ81CH04yJ7QC+mTUuT7BA/90tPFMdk2/R7QIyRf9g/P+6ZMezRHeYZg+0stpFL/8fuGsH8oZO+oyJH/UdSMJzNzF40="
 
 addons:
   coverity_scan:
