@@ -3,6 +3,11 @@
   for SJLJ on other systems, one would want to rewrite springboard() and co_create() and hack the jmb_buf stack pointer.
 */
 
+#if defined(_FORTIFY_SOURCE)
+#define OLD_FORTIFY_SOURCE _FORTIFY_SOURCE
+#define _FORTIFY_SOURCE 0
+#endif
+
 #define LIBCO_C
 #include "libco.h"
 #include "settings.h"
@@ -142,4 +147,8 @@ int co_serializable() {
 
 #ifdef __cplusplus
 }
+#endif
+
+#if defined(OLD_FORTIFY_SOURCE)
+#define _FORTIFY_SOURCE OLD_FORTIFY_SOURCE
 #endif
