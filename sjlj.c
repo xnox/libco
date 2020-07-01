@@ -62,12 +62,12 @@ cothread_t co_derive(void* memory, unsigned int size, void (*coentry)(void)) {
       sigemptyset(&handler.sa_mask);
       creating = thread;
 
-      if(!sigaction(SIGUSR1, &handler, &old_handler)) {
-        if(!raise(SIGUSR1)) {
+      if(!sigaction(SIGRTMAX-4, &handler, &old_handler)) {
+        if(!raise(SIGRTMAX-4)) {
           thread->coentry = coentry;
         }
         sigaltstack(&old_stack, 0);
-        sigaction(SIGUSR1, &old_handler, 0);
+        sigaction(SIGRTMAX-4, &old_handler, 0);
       }
     }
 
@@ -102,12 +102,12 @@ cothread_t co_create(unsigned int size, void (*coentry)(void)) {
       sigemptyset(&handler.sa_mask);
       creating = thread;
 
-      if(!sigaction(SIGUSR1, &handler, &old_handler)) {
-        if(!raise(SIGUSR1)) {
+      if(!sigaction(SIGRTMAX-4, &handler, &old_handler)) {
+        if(!raise(SIGRTMAX-4)) {
           thread->coentry = coentry;
         }
         sigaltstack(&old_stack, 0);
-        sigaction(SIGUSR1, &old_handler, 0);
+        sigaction(SIGRTMAX-4, &old_handler, 0);
       }
     }
 
